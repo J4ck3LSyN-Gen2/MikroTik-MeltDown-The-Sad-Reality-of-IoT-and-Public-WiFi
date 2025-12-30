@@ -1,5 +1,13 @@
 # MikroTik Meltdown: The Sad Reality of IOT and Public Wifi
 
+_Author: J4ck3LSyN_ [GitHub](https://github.com/J4ck3LSyN-Gen2)
+
+_Investigation Date: NOT-PROVIDED_
+
+_Write Up Date: 12/29/2025_
+
+---
+
 ## 1. Legal Notice & Disclaimer
 
 **Confidentiality Notice:** This document contains confidential and proprietary information intended solely for the use of the authorized recipient. Any review, retransmission, dissemination, or other use of, or taking of any action in reliance upon this information by persons or entities other than the intended recipient is prohibited.
@@ -11,6 +19,11 @@
 **Severity & Impact Warning:** The vulnerabilities detailed in this report are critical and actively exploitable in the wild. While the target hardware may appear dated (circa 2005-present), it remains in active use across multiple locations. This report is strictly for educational and defensive purposes to highlight the risks of legacy IoT devices.
 
 ## 2. Introduction
+**MikroTik** is a Latvian manufacturer of computer networking equipment and software, best known for its RouterOS operating system and RouterBOARD hardware. These devices are ubiquitous in both small business and enterprise environments due to their cost-effectiveness and robust feature set. However, their longevity often leads to a critical security oversight: legacy deployments that are forgotten, unpatched, and exposed.
+
+This writeup details a "Boot-to-Root" engagement targeting a Public WiFi network powered by legacy MikroTik infrastructure. Our concept focuses on identifying and exploiting outdated services that have been left accessible on the LAN. We explore attack vectors ranging from unauthenticated administrative access via the legacy `webconf` binary to full system compromise, persistence, and lateral movement.
+
+The existence of such vulnerable edge devices poses significant risks, potentially escalating to national security concerns when these networks bridge into critical infrastructure or handle sensitive data. Modern attackers frequently target these "low-hanging fruit"—outdated IoT systems and routers—to establish beachheads within otherwise secure perimeters. This report serves as a case study on the dangers of technical debt and the critical need for lifecycle management in network hardware.
 
 ## 3. Scope
 Any and all LAN/VLAN services diconnected from the centralized business/hosting platform.
