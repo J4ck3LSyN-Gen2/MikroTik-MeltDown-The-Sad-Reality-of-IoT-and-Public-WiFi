@@ -288,7 +288,7 @@ Target: `http://172.16.0.1:55511`
             - `file remove file=myfile.rsc`
 
 * **9. The 'ping-flood' Tool**
-    > NOTE: The intended use here is for targeted Layre-7 (smurf) attacks, or internal DoS.
+    > NOTE: The intended use here is for targeted Layer-7 (smurf) attacks, or internal DoS.
     * **9.1 Execution**
         - `tool ping-flood count=1000 size=1492 address=172.16.0.x`
 
