@@ -367,8 +367,7 @@ Target: `http://172.16.0.1:55511`
         - `certificate export-certificate ... export-passphrase=""` The client key.
     * **14.7 Enable The Server**
         - `interface ovpn-server server set enabled=yes certificate=MT-SecServ`
-    * **14.8 Validate The Firewall Rules**
-        - ``
+    > _To Be Continued (Processing Dedactions)_
 
 * **15. Enabling DNS For External Outreach** Allowing this exposes the `private` network (previously segmented to only allow traffic through the bridges) to access the public internet, allowing for remote CLI connections, SSH, telnet, SOCKS5, proxying & Open VPN VPS Connections.
     * **15.1 FIX: Unable To Resolve Error**
@@ -395,4 +394,42 @@ Target: `http://172.16.0.1:55511`
 
 * **18. NAT Bypassing & Identification**
     > NOTE: It is suspected that NAT filtering is the main reason for `remote` connections not working.
-    
+    > _To Be Continued..._
+
+
+# Conclusion
+This assessment confirms that legacy network infrastructure, specifically outdated MikroTik RouterOS deployments, presents a severe security risk. By leveraging exposed configuration services and default settings, we successfully demonstrated a complete system compromise without the need for advanced exploitation techniques. The ease with which administrative access was obtained highlights the dangers of "set and forget" deployment strategies. The device's inability to support modern encryption standards further exacerbates the risk, making secure management impossible without significant intervention.
+
+# Impact
+The vulnerabilities identified in this report are classified as **Critical**.
+
+**Primary Attack Vectors:**
+- **Unauthenticated Configuration Service (Port 55511):** Allowed for immediate administrative takeover without credentials.
+- **Legacy Services:** Exposed Telnet, FTP, and Bandwidth Test ports provided additional avenues for enumeration and denial-of-service.
+- **Lack of Segmentation:** The flat network architecture allowed for unrestricted lateral movement once the edge device was compromised.
+
+**Operational & Strategic Consequences:**
+For small businesses and legacy networks, the impact ranges from theft of customer data (via packet sniffing) to the co-opting of bandwidth for illicit activities. Attackers can easily deploy SOCKS proxies to mask their origin for further attacks.
+
+In the context of National Security, widespread vulnerabilities in edge routing equipment create a massive attack surface. Threat actors can chain these compromised devices to form massive botnets (similar to Mēris) capable of crippling critical infrastructure via DDoS. Furthermore, these routers often sit at the boundary of sensitive networks; compromising them provides a persistent beachhead for Advanced Persistent Threats (APTs) to conduct espionage, intercept communications, and bypass traditional perimeter firewalls undetected.
+
+# Security
+Immediate remediation requires migrating away from legacy firmware versions (circa 2005) to modern, supported releases.
+
+**RouterOS v7.x Upgrade:**
+The current stable branch (RouterOS v7.x) patches the specific `webconf` vulnerabilities and introduces modern kernel protections.
+
+**Hardening Measures:**
+- **Service Reduction:** Disable `telnet`, `ftp`, `www` (if not used), and `bandwidth-test-server`.
+- **Management Access Control:** Restrict administrative login to specific internal IP ranges or VPN interfaces only.
+- **Strong Cryptography:** Replace self-signed or legacy certificates with valid TLS certificates for WebFig and API access.
+
+# Improvements
+To move from a reactive to a proactive security posture, the following improvements should be implemented using native RouterOS tools:
+
+1.  **Enhanced Logging:** Move beyond memory logging. Configure `/system logging` to forward events to a remote Syslog server (Splunk, ELK, or Graylog) to preserve forensic data even after a device reboot.
+2.  **Automated Notifications:** Configure `/tool e-mail` settings to trigger alerts for specific log topics. For example, a script can be scheduled to email administrators immediately upon detection of a successful login or a change in the `/user` database.
+3.  **Intrusion Detection:**
+    - **Scripting & Scheduler:** Implement watchdog scripts that periodically check for new files (often dropped during exploitation), new firewall NAT rules (used for persistence), or changes to the `system script` repository.
+    - **Traffic Flow:** Enable `/ip traffic-flow` to export NetFlow/IPFIX data. This allows for the detection of anomalous traffic patterns, such as a sudden spike in outbound connections indicating a C2 beacon or participation in a DDoS attack.
+
