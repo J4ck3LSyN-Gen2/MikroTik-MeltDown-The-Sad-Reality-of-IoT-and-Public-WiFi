@@ -367,7 +367,7 @@ Target: `http://172.16.0.1:55511`
         - `certificate export-certificate ... export-passphrase=""` The client key.
     * **14.7 Enable The Server**
         - `interface ovpn-server server set enabled=yes certificate=MT-SecServ`
-    > _To Be Continued (Processing Dedactions)_
+    > _To Be Continued (Processing Redactions)_
 
 * **15. Enabling DNS For External Outreach** Allowing this exposes the `private` network (previously segmented to only allow traffic through the bridges) to access the public internet, allowing for remote CLI connections, SSH, telnet, SOCKS5, proxying & Open VPN VPS Connections.
     * **15.1 FIX: Unable To Resolve Error**
