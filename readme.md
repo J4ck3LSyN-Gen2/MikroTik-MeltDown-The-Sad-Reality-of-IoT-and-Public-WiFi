@@ -307,12 +307,12 @@ Target: `http://172.16.0.1:55511`
         - `ip service enable <service>` or `ip service enable ssh`, however the service refuses to spawn due to inability to execute `system reboot`.
 
 * **12. SSH Persistence**
+    > _NOTE:_ Under futher investigation, obtaining these keys and understand the RouterOS file transfer operations ended up working. I suggest using `ip address print` and checking for ip rotation/attempt blind testing until proven successfull.
     * **12.1 Leak Any Existing Keys**
         - `ip ssh print`
     * **12.2 Export Any Existing Keys**
         - `ip ssh export`
         - Use further methods to extract any keys.
-        > NOTE: If proven futile, identify the model from the extracted information and use OSINT.
     * **12.3 Regenerating The 'Host Key'**
         - `ip ssh regenerate-host-key` _NOTE: Required a couple of tries to get the CLI to work._
         - `ip ssh export-host-key` _NOTE: Also took some time, often hung for an extended period._
